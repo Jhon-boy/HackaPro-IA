@@ -1,7 +1,7 @@
-using InfraAgent.Application.Knowledge;
-using InfraAgent.Application.Projects;
-using InfraAgent.Core.Policies;
-using InfraAgent.Core.Settings;
+﻿using InfraAgent.Knowledge;
+using InfraAgent.Projects;
+using InfraAgent.Policies;
+using InfraAgent.Settings;
 using InfraAgent.Functions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -1,5 +1,5 @@
-﻿using InfraAgent.Core.Settings;
-using InfraAgent.Core.Validation;
+﻿using InfraAgent.Settings;
+using InfraAgent.Validation;
 
 namespace InfraAgent.Tests.Core;
 
@@ -63,4 +63,3 @@ public class InputValidatorsTests
         Assert.Throws<ArgumentException>(() => InputValidators.Message(new string('x', 101), 100));
     }
 }
-

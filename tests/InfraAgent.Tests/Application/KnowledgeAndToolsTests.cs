@@ -1,7 +1,7 @@
-using InfraAgent.Application.Abstractions;
-using InfraAgent.Application.Knowledge;
-using InfraAgent.Application.Tools;
-using InfraAgent.Core.Models;
+﻿using InfraAgent.Abstractions;
+using InfraAgent.Knowledge;
+using InfraAgent.Tools;
+using InfraAgent.Models;
 using InfraAgent.Tests.Support;
 
 namespace InfraAgent.Tests.Application;
@@ -76,7 +76,7 @@ public class KnowledgeAndToolsTests
         var result = await invoker.InvokeAsync(AgentRole.IacGenerator, ToolNames.GetFile, """{"path":"main.tf"}""", NewContext(), default);
 
         Assert.StartsWith("ERROR: herramienta no permitida", result);
-        Assert.Contains(host.Audit.Entries, e => e.Kind == InfraAgent.Core.Auditing.AuditKind.Security && !e.Success);
+        Assert.Contains(host.Audit.Entries, e => e.Kind == InfraAgent.Auditing.AuditKind.Security && !e.Success);
     }
 
     [Fact]

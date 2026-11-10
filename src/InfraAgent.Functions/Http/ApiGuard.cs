@@ -1,7 +1,7 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.Json;
-using InfraAgent.Application.Agents;
-using InfraAgent.Core.Security;
+using InfraAgent.Agents;
+using InfraAgent.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

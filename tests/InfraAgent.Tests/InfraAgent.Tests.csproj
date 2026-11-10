@@ -22,8 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\InfraAgent.Application\InfraAgent.Application.csproj" />
-    <ProjectReference Include="..\..\src\InfraAgent.Infrastructure\InfraAgent.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\InfraAgent\InfraAgent.csproj" />
   </ItemGroup>
 
 </Project>

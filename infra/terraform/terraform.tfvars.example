@@ -1,0 +1,80 @@
+# Copie este archivo a terraform.tfvars y ajuste. No contiene secretos.
+# Todo lo que no declare aquí toma el valor por defecto de src/InfraAgent/infraagent.settings.json.
+
+# ---- Plataforma ----
+subscription_id = "00000000-0000-0000-0000-000000000000"
+location        = "eastus2"
+location_short  = "eus2"
+environment     = "dev"
+project_name    = "infraagent"
+owner           = "equipo-plataforma"
+cost_center     = "CC-0000"
+
+# ---- Azure AI Foundry ----
+foundry_endpoint         = "https://<recurso>.services.ai.azure.com/api/projects/<proyecto>"
+foundry_resource_id      = "" # id del recurso para asignar 'Azure AI User' automáticamente (opcional)
+foundry_default_agent_id = "asst_xxxxxxxx"
+
+# Un agente por responsabilidad (opcional; vacío = usa el agente por defecto)
+foundry_agent_ids = {
+  # Orchestrator = "asst_..."
+  # Architecture = "asst_..."
+  # Policy       = "asst_..."
+  # IacGenerator = "asst_..."
+  # Security     = "asst_..."
+}
+
+# ---- Identidad de la organización / idioma ----
+organization_name = "Banco Ejemplo"
+response_language = "español"
+
+# ---- Capacidades (apague lo que no quiera exponer en la demo) ----
+features = {
+  images                = true
+  repository_access     = true
+  architecture_analysis = true
+  policy_evaluation     = true
+  terraform_generation  = true
+  security_review       = true
+}
+
+# ---- Generación de Terraform ----
+generation = {
+  auto_security_review = true
+  max_fix_rounds       = 1
+  block_from           = "High" # Info | Low | Medium | High | Critical
+  default_region       = "eastus2"
+  allowed_regions      = "eastus2,centralus"
+  naming_pattern       = "{tipo}-{app}-{ambiente}-{region}"
+  required_tags        = "ambiente,proyecto,responsable,centro_costo"
+  azurerm_version      = "~> 4.0"
+}
+
+# ---- Chat ----
+chat = {
+  max_images          = 4
+  allowed_image_types = "image/png,image/jpeg"
+}
+
+# ---- Repositorios (opcional) ----
+# None: solo texto e imágenes (recomendado para la demo en Azure).
+# AzureDevOps: lectura de repositorios; requiere URL y (PAT en Key Vault o identidad administrada).
+repository_provider = "None"
+
+# azure_devops_organization_url = "https://dev.azure.com/mi-banco"
+# azure_devops_pat_secret_name  = "azuredevops-pat"   # "" = identidad administrada
+
+projects = [
+  # {
+  #   id           = "pagos"
+  #   display_name = "Plataforma de pagos"
+  #   project      = "Pagos"
+  #   repository   = "infra-pagos"
+  #   branch       = "main"
+  # }
+]
+
+# ---- Cualquier otra variable de InfraAgent (ver docs/CONFIGURACION.md) ----
+extra_app_settings = {
+  # "InfraAgent__Analysis__MaxFiles" = "60"
+}

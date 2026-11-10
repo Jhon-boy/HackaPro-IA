@@ -10,14 +10,12 @@
     <NoWarn>$(NoWarn);CS9057</NoWarn>
   </PropertyGroup>
 
-  <Import Project="..\..\build\InfraAgentContent.props" />
-
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InfraAgent.Infrastructure\InfraAgent.Infrastructure.csproj" />
+    <ProjectReference Include="..\InfraAgent\InfraAgent.csproj" />
   </ItemGroup>
 
   <ItemGroup>

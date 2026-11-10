@@ -1,5 +1,5 @@
-using InfraAgent.Core.Models;
-using InfraAgent.Core.Policies;
+﻿using InfraAgent.Models;
+using InfraAgent.Policies;
 using InfraAgent.Tests.Support;
 
 namespace InfraAgent.Tests.Core;

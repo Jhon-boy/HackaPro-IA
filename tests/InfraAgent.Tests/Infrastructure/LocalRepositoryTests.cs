@@ -1,5 +1,5 @@
-using InfraAgent.Core.Settings;
-using InfraAgent.Infrastructure.Repositories;
+﻿using InfraAgent.Settings;
+using InfraAgent.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 

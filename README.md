@@ -1,79 +1,85 @@
 # InfraAgent
 
-Asistente de **Infraestructura como Código (Terraform) para Azure** con un agente de **Azure AI Foundry** como cerebro.
-En el chat, el usuario describe una solución (y puede subir imágenes de arquitectura); el agente:
+Chat para analizar arquitecturas Azure, evaluar políticas, revisar seguridad y generar Terraform mediante
+un agente desplegado en **Azure AI Foundry**. El código generado se entrega en el chat: InfraAgent nunca
+ejecuta comandos ni aplica infraestructura.
 
-1. **Interpreta** la arquitectura (texto, imágenes y, opcionalmente, un proyecto/repositorio).
-2. **Explica** cómo funcionaría bajo las políticas de la organización.
-3. **Genera Terraform** conforme a esas políticas y lo **revisa** con un agente de seguridad (autocorrección acotada).
-4. **Revisa la seguridad** de Terraform existente, con evidencia verificada por código.
+## Arquitectura simple
 
-El Terraform se entrega **solo en el chat**; nada se ejecuta ni se aplica en Azure. Todas las herramientas corren en
-nuestro código (Azure Functions), de solo lectura y con lista cerrada por agente.
-
-## Arquitectura
-```
-Core (sin dependencias de nube/modelo) → Application (agentes, herramientas, flujos, puertos)
-   → Infrastructure (Foundry, repositorios, auditoría, DI) → Functions (host HTTP) + Cli + Tests
-```
-- Cinco agentes: **Orquestador, Arquitectura, Políticas, Generador IaC, Seguridad**. Pueden compartir un agente de Foundry o tener uno cada uno.
-- El **repositorio es la fuente de verdad** del conocimiento: `agents/` (instrucciones y skills) y `policies/catalogo.yaml`.
-- El modelo no decide a ciegas: `EvidenceVerifier` descarta hallazgos sin evidencia literal verificable y fuerza la severidad desde el catálogo.
-- Seguridad: herramientas de solo lectura, parámetros validados, secretos enmascarados antes del modelo, lista blanca de extensiones legibles, límites con `TRUNCADO`, auditoría en Application Insights.
-
-## Configurable en todo
-Una sola sección (`InfraAgent`) con JSON + variables de entorno + Key Vault. Se puede cambiar sin tocar código: capacidades
-(`Features`), proveedor de repositorios (`None`/`Local`/`AzureDevOps`), región, nombres, etiquetas y versiones de Terraform
-(`Generation`), idioma, tipos de imagen, límites, políticas y agentes. Lista completa: **[docs/CONFIGURACION.md](docs/CONFIGURACION.md)**.
-
-## Estructura
-```
-src/InfraAgent.Core | .Application | .Infrastructure | .Functions | .Cli
-tests/InfraAgent.Tests          xUnit (dotnet test)
-agents/                         instrucciones y skills por agente
-policies/catalogo.yaml          catálogo de políticas (EJEMPLO: reemplazar por el de la organización)
-config/infraagent.settings.json configuración por defecto
-samples/demo-pagos/             Terraform con fallas a propósito para la demo
-deploy/terraform/               despliegue de la Function y su infraestructura
-pipelines/deploy-function.yml   (opcional) despliegue del código
+```text
+src/
+├── InfraAgent/              lógica, agentes, Foundry, seguridad y conocimiento
+└── InfraAgent.Functions/    API HTTP de Azure Functions
+tests/
+└── InfraAgent.Tests/        pruebas xUnit
+infra/
+└── terraform/               despliegue opcional en Azure
+docs/                        documentación
 ```
 
-## Demo local (5 minutos)
+Solo hay tres proyectos .NET:
+
+1. `InfraAgent`: lógica organizada por capacidades internas.
+2. `InfraAgent.Functions`: entrada HTTP, sin lógica de negocio.
+3. `InfraAgent.Tests`: pruebas.
+
+La separación interna mediante interfaces e inyección de dependencias permite extraer módulos a proyectos
+independientes cuando el tamaño real lo justifique.
+
+## Capacidades
+
+- Agentes especializados: Orquestador, Arquitectura, Políticas, Generador IaC y Seguridad.
+- Texto e imágenes de arquitectura.
+- Terraform conforme al catálogo de políticas con revisión y autocorrección acotada.
+- Lectura opcional de carpetas locales o repositorios Azure DevOps.
+- Evidencia verificable: se descartan hallazgos inventados por el modelo.
+- Herramientas cerradas de solo lectura, validación de entradas y enmascarado de secretos.
+
+El conocimiento está junto al código:
+
+- `src/InfraAgent/Knowledge/agents`: instrucciones y skills.
+- `src/InfraAgent/Knowledge/policies/catalogo.yaml`: catálogo de ejemplo que debe reemplazarse.
+- `src/InfraAgent/infraagent.settings.json`: valores predeterminados sin secretos.
+
+## Configuración
+
+Una sola sección `InfraAgent`, configurable mediante JSON, variables de entorno y referencias de Key Vault.
+Consulte [docs/CONFIGURACION.md](docs/CONFIGURACION.md).
+
+Los únicos datos imprescindibles para usar Foundry son:
+
+```text
+InfraAgent__Foundry__Endpoint
+InfraAgent__Foundry__DefaultAgentId
+```
+
+## Desarrollo
+
 ```powershell
 dotnet build InfraAgent.sln
-dotnet test  InfraAgent.sln
-
-cd src/InfraAgent.Cli
-dotnet user-secrets set "InfraAgent:Foundry:Endpoint" "https://<recurso>.services.ai.azure.com/api/projects/<proyecto>"
-dotnet user-secrets set "InfraAgent:Foundry:DefaultAgentId" "asst_..."
-az login
-
-dotnet run -- status            # configuración, capacidades y catálogo
-dotnet run -- policies          # políticas vigentes
-dotnet run -- chat --project demo-pagos
-dotnet run -- chat --image .\arquitectura.png --out .\salida-terraform
+dotnet test InfraAgent.sln
 ```
-Ejemplos para el chat:
-- «Analiza la arquitectura del proyecto y dime qué incumple las políticas» (`--project demo-pagos`).
-- «Genera el Terraform de una API con Key Vault y SQL privados según esta imagen» (`--image`).
 
-## API (Azure Functions)
-| Método y ruta | Auth | Descripción |
-|---|---|---|
-| `GET /api/health` | Anónimo | Salud. |
-| `GET /api/status` | Función | Diagnóstico de configuración (solo nombres). |
-| `GET /api/config` | Función | Parámetros efectivos no secretos. |
-| `GET /api/projects` | Función | Proyectos habilitados. |
-| `POST /api/chat` | Función | `{ message, conversationId?, projectId?, images[], architecture?, files[] }` |
-| `DELETE /api/chat/{conversationId}` | Función | Borra la conversación en Foundry. |
+Para ejecutar la Function localmente, copie:
 
-El servicio no guarda estado: el cliente devuelve `conversationId`, `architecture` y `files` en el siguiente turno.
-Functions local: copie `src/InfraAgent.Functions/local.settings.sample.json` a `local.settings.json` y use `func start`.
+```text
+src/InfraAgent.Functions/local.settings.sample.json
+```
+
+como `local.settings.json`, configure Foundry y ejecute `func start`.
+
+## API
+
+| Método y ruta | Descripción |
+|---|---|
+| `GET /api/health` | Salud del servicio. |
+| `GET /api/status` | Diagnóstico sin exponer valores secretos. |
+| `GET /api/config` | Configuración efectiva no secreta. |
+| `GET /api/projects` | Proyectos habilitados. |
+| `POST /api/chat` | Chat, imágenes, arquitectura y archivos Terraform. |
+| `DELETE /api/chat/{conversationId}` | Elimina el hilo de Foundry. |
 
 ## Despliegue
-`deploy/terraform` (ver su README) crea la infraestructura y **todos los App Settings centralizados**.
 
-## Pendientes antes de producción
-- Reemplazar `policies/catalogo.yaml` (16 políticas de **ejemplo**) por las reales.
-- Registrar los ids reales de los agentes de Foundry y validar el comportamiento contra el servicio real.
-- Validar `deploy/terraform` con `terraform validate`/`plan` y endurecer la red (Private Endpoints).
+`infra/terraform` crea la Function App, identidad administrada, almacenamiento y observabilidad.
+Terraform no fue validado localmente porque la herramienta no está instalada en este entorno.

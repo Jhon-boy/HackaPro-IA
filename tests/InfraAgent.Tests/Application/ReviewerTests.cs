@@ -1,8 +1,8 @@
-﻿using InfraAgent.Application.Abstractions;
-using InfraAgent.Application.Agents;
-using InfraAgent.Application.Review;
-using InfraAgent.Core.Models;
-using InfraAgent.Core.Settings;
+﻿using InfraAgent.Abstractions;
+using InfraAgent.Agents;
+using InfraAgent.Review;
+using InfraAgent.Models;
+using InfraAgent.Settings;
 using InfraAgent.Tests.Support;
 
 namespace InfraAgent.Tests.Application;
@@ -116,4 +116,3 @@ public class ReviewerTests
         Assert.Contains("b.tf", tight.Omitted);
     }
 }
-

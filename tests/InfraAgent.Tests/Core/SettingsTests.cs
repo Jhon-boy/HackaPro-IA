@@ -1,6 +1,6 @@
-using InfraAgent.Core.Models;
-using InfraAgent.Core.Settings;
-using InfraAgent.Infrastructure;
+﻿using InfraAgent.Models;
+using InfraAgent.Settings;
+using InfraAgent;
 using InfraAgent.Tests.Support;
 using Microsoft.Extensions.Configuration;
 
@@ -122,28 +122,17 @@ public class SettingsTests
     }
 
     [Fact]
-    public void The_demo_project_in_the_default_configuration_points_to_an_existing_sample()
-    {
-        var path = Path.Combine(RepoPaths.Root, "config", "infraagent.settings.json");
-        var settings = new ConfigurationBuilder().AddJsonFile(path).Build().GetSection("InfraAgent").Get<InfraAgentSettings>()!;
-
-        var project = Assert.Single(settings.Projects);
-        Assert.True(File.Exists(Path.Combine(RepoPaths.Root, project.Path, "main.tf")));
-    }
-
-    [Fact]
     public void Repository_settings_file_is_valid_json_with_the_expected_sections()
     {
-        var path = Path.Combine(RepoPaths.Root, "config", "infraagent.settings.json");
+        var path = Path.Combine(RepoPaths.Root, "src", "InfraAgent", "infraagent.settings.json");
         var config = new ConfigurationBuilder().AddJsonFile(path).Build();
         var settings = config.GetSection("InfraAgent").Get<InfraAgentSettings>()!;
 
-        Assert.Equal("agents", settings.Knowledge.AgentsDirectory);
+        Assert.Equal("knowledge/agents", settings.Knowledge.AgentsDirectory);
         Assert.Equal(Severity.High, settings.Generation.BlockFrom);
-        Assert.Equal(RepositoryProvider.Local, settings.Repositories.Provider);
+        Assert.Equal(RepositoryProvider.None, settings.Repositories.Provider);
         Assert.True(settings.Features.TerraformGeneration);
         Assert.Equal(new[] { ".tf", ".tfvars" }, settings.Analysis.ExtensionList);
-        Assert.NotEmpty(settings.Projects);
+        Assert.Empty(settings.Projects);
     }
 }
-

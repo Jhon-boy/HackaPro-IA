@@ -1,8 +1,8 @@
-﻿using InfraAgent.Core.Models;
-using InfraAgent.Core.Policies;
-using InfraAgent.Core.Review;
-using InfraAgent.Core.Settings;
-using InfraAgent.Core.Terraform;
+﻿using InfraAgent.Models;
+using InfraAgent.Policies;
+using InfraAgent.Review;
+using InfraAgent.Settings;
+using InfraAgent.Terraform;
 using InfraAgent.Tests.Support;
 
 namespace InfraAgent.Tests.Core;
@@ -113,4 +113,3 @@ public class EvidenceVerifierTests
         Assert.False(TerraformInspector.IsTerraformPath("a/readme.md", new[] { ".tf" }));
     }
 }
-

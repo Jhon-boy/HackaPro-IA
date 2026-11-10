@@ -1,8 +1,8 @@
-using InfraAgent.Application;
-using InfraAgent.Application.Abstractions;
-using InfraAgent.Core.Auditing;
-using InfraAgent.Core.Models;
-using InfraAgent.Core.Settings;
+﻿using InfraAgent;
+using InfraAgent.Abstractions;
+using InfraAgent.Auditing;
+using InfraAgent.Models;
+using InfraAgent.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -20,8 +20,8 @@ public static class RepoPaths
         return dir?.FullName ?? throw new InvalidOperationException("No se encontró la raíz del repositorio.");
     }
 
-    public static string Agents => Path.Combine(Root, "agents");
-    public static string PolicyCatalog => Path.Combine(Root, "policies", "catalogo.yaml");
+    public static string Agents => Path.Combine(Root, "src", "InfraAgent", "Knowledge", "agents");
+    public static string PolicyCatalog => Path.Combine(Root, "src", "InfraAgent", "Knowledge", "policies", "catalogo.yaml");
 }
 
 /// <summary>Auditoría en memoria para verificar qué se registró.</summary>
@@ -122,10 +122,11 @@ public sealed class TestHost
     public static InfraAgentSettings DefaultSettings() => new()
     {
         Foundry = { Endpoint = "https://demo.services.ai.azure.com/api/projects/demo", DefaultAgentId = "asst_demo" },
+        Repositories = { Provider = RepositoryProvider.Local },
         Knowledge = { AgentsDirectory = RepoPaths.Agents, PolicyCatalogPath = RepoPaths.PolicyCatalog },
         Projects =
         {
-            new ProjectSettings { Id = "demo", DisplayName = "Demo", Path = "samples/demo-pagos", Branch = "main" }
+            new ProjectSettings { Id = "demo", DisplayName = "Demo", Path = "demo", Branch = "main" }
         }
     };
 
@@ -174,4 +175,3 @@ public static class Json
             notes = Array.Empty<string>()
         });
 }
-

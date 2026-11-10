@@ -1,9 +1,9 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using Azure.Core;
-using InfraAgent.Application.Abstractions;
-using InfraAgent.Core.Settings;
-using InfraAgent.Infrastructure.AzureDevOps;
+using InfraAgent.Abstractions;
+using InfraAgent.Settings;
+using InfraAgent.AzureDevOps;
 using Microsoft.Extensions.Options;
 
 namespace InfraAgent.Tests.Infrastructure;

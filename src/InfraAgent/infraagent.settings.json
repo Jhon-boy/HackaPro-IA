@@ -1,0 +1,88 @@
+{
+  "InfraAgent": {
+
+    "Identity": {
+      "ManagedIdentityClientId": ""
+    },
+
+    "Foundry": {
+      "Endpoint": "",
+      "DefaultAgentId": "",
+      "Agents": {
+        "Orchestrator": "",
+        "Architecture": "",
+        "Policy": "",
+        "IacGenerator": "",
+        "Security": ""
+      },
+      "RunTimeoutSeconds": 180,
+      "PollIntervalMs": 800,
+      "MaxToolRounds": 8
+    },
+
+    "Features": {
+      "Images": true,
+      "RepositoryAccess": true,
+      "ArchitectureAnalysis": true,
+      "PolicyEvaluation": true,
+      "TerraformGeneration": true,
+      "SecurityReview": true
+    },
+
+    "Repositories": {
+      "Provider": "None",
+      "LocalRoot": ""
+    },
+
+    "AzureDevOps": {
+      "OrganizationUrl": "",
+      "ApiVersion": "7.1",
+      "TimeoutSeconds": 60
+    },
+
+    "Knowledge": {
+      "AgentsDirectory": "knowledge/agents",
+      "PolicyCatalogPath": "knowledge/policies/catalogo.yaml",
+      "OrganizationName": "el banco"
+    },
+
+    "Analysis": {
+      "MaxFiles": 40,
+      "MaxFileBytes": 100000,
+      "MaxTotalBytes": 400000,
+      "MaxToolOutputChars": 30000,
+      "MaxTreeItems": 300,
+      "FileExtensions": ".tf,.tfvars",
+      "ReadableExtensions": ".tf,.tfvars,.hcl,.md,.json,.yaml,.yml,.txt",
+      "MaxComponents": 60,
+      "MaxFlows": 120
+    },
+
+    "Chat": {
+      "TimeoutSeconds": 200,
+      "MaxMessageChars": 8000,
+      "ResponseLanguage": "español",
+      "MaxImages": 4,
+      "MaxImageBytes": 5000000,
+      "AllowedImageTypes": "image/png,image/jpeg",
+      "MaxGeneratedFiles": 20,
+      "MaxGeneratedFileBytes": 100000
+    },
+
+    "Generation": {
+      "AutoSecurityReview": true,
+      "MaxFixRounds": 1,
+      "BlockFrom": "High",
+      "MaxPoliciesInline": 40,
+      "TerraformVersion": ">= 1.6.0",
+      "AzurermVersion": "~> 4.0",
+      "DefaultRegion": "eastus2",
+      "AllowedRegions": "",
+      "NamingPattern": "{tipo}-{app}-{ambiente}-{region}",
+      "RequiredTags": "ambiente,proyecto,responsable,centro_costo",
+      "AllowedFileExtensions": ".tf,.tfvars,.md"
+    },
+
+    "Projects": []
+  }
+}

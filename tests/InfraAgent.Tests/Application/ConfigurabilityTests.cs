@@ -1,11 +1,11 @@
-using InfraAgent.Application.Abstractions;
-using InfraAgent.Application.Chat;
-using InfraAgent.Application.Knowledge;
-using InfraAgent.Application.Projects;
-using InfraAgent.Application.Review;
-using InfraAgent.Application.Tools;
-using InfraAgent.Core.Models;
-using InfraAgent.Core.Settings;
+﻿using InfraAgent.Abstractions;
+using InfraAgent.Chat;
+using InfraAgent.Knowledge;
+using InfraAgent.Projects;
+using InfraAgent.Review;
+using InfraAgent.Tools;
+using InfraAgent.Models;
+using InfraAgent.Settings;
 using InfraAgent.Tests.Support;
 
 namespace InfraAgent.Tests.Application;
@@ -48,7 +48,7 @@ public class ConfigurabilityTests
         var result = await host.Get<IToolInvoker>().InvokeAsync(AgentRole.Orchestrator, ToolNames.ReviewSecurity, "{}", Ctx(), default);
 
         Assert.Contains("deshabilitada", result);
-        Assert.Contains(host.Audit.Entries, e => e.Kind == InfraAgent.Core.Auditing.AuditKind.Security && !e.Success);
+        Assert.Contains(host.Audit.Entries, e => e.Kind == InfraAgent.Auditing.AuditKind.Security && !e.Success);
     }
 
     [Fact]
@@ -245,11 +245,11 @@ public class ConfigurabilityTests
     public void Policy_catalog_path_can_point_to_another_file()
     {
         var host = new TestHost().Build();
-        Assert.True(host.Get<InfraAgent.Core.Policies.PolicyCatalog>().Policies.Count > 0);
+        Assert.True(host.Get<InfraAgent.Policies.PolicyCatalog>().Policies.Count > 0);
 
         var other = TestHost.DefaultSettings();
         other.Knowledge.PolicyCatalogPath = Path.Combine(Path.GetTempPath(), "no-existe.yaml");
-        Assert.ThrowsAny<IOException>(() => InfraAgent.Core.Policies.PolicyCatalogLoader.LoadFromFile(other.Knowledge.PolicyCatalogPath));
+        Assert.ThrowsAny<IOException>(() => InfraAgent.Policies.PolicyCatalogLoader.LoadFromFile(other.Knowledge.PolicyCatalogPath));
     }
 
     // ---------------- Validación de la configuración ----------------

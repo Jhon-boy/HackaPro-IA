@@ -6,15 +6,14 @@ razonable: solo son obligatorios el endpoint y el agente de Foundry.
 ## Dónde se configura (de menor a mayor prioridad)
 | Origen | Uso |
 |---|---|
-| `config/infraagent.settings.json` (o la ruta de `INFRAAGENT_CONFIG`) | Valores por defecto versionados. **Sin secretos.** |
+| `src/InfraAgent/infraagent.settings.json` (o la ruta de `INFRAAGENT_CONFIG`) | Valores por defecto versionados. **Sin secretos.** |
 | Variables de entorno / App Settings de la Function | Valores por ambiente. Formato `InfraAgent__Seccion__Clave` (`__` equivale a `:`). |
 | Referencias a Key Vault (`@Microsoft.KeyVault(...)`) como App Setting | Secretos. |
-| `dotnet user-secrets` (solo CLI local) | Secretos de desarrollo. |
+| `local.settings.json` ignorado por Git | Configuración y secretos de desarrollo local. |
 
-- **En Azure**: se edita `deploy/terraform/terraform.tfvars`; `locals.tf` genera todos los App Settings.
+- **En Azure**: se edita `infra/terraform/terraform.tfvars`; `locals.tf` genera todos los App Settings.
 - **Function local**: copie `src/InfraAgent.Functions/local.settings.sample.json` a `local.settings.json`.
-- **CLI local**: variables de entorno o `dotnet user-secrets`.
-- **Diagnóstico**: `infraagent status` (CLI), `GET /api/status` (qué falta, solo nombres) y `GET /api/config` (parámetros efectivos no secretos).
+- **Diagnóstico**: `GET /api/status` (qué falta, solo nombres) y `GET /api/config` (parámetros efectivos no secretos).
 
 ## Qué se puede cambiar sin tocar código
 | Quiero… | Configuración |
@@ -28,8 +27,8 @@ razonable: solo son obligatorios el endpoint y el agente de Foundry.
 | Aceptar otros formatos de imagen | `Chat:AllowedImageTypes` |
 | Leer carpetas locales, Azure DevOps o ningún repositorio | `Repositories:Provider` |
 | Cambiar qué archivos se leen / revisan / generan | `Analysis:ReadableExtensions`, `Analysis:FileExtensions`, `Generation:AllowedFileExtensions` |
-| Cambiar las políticas | `policies/catalogo.yaml` (o `Knowledge:PolicyCatalogPath`) |
-| Cambiar el comportamiento de un agente | `agents/<agente>/instructions.md` y sus `skills/` (o `Knowledge:AgentsDirectory`) |
+| Cambiar las políticas | `src/InfraAgent/Knowledge/policies/catalogo.yaml` (o `Knowledge:PolicyCatalogPath`) |
+| Cambiar el comportamiento de un agente | `src/InfraAgent/Knowledge/agents/<agente>/instructions.md` y sus `skills/` |
 | Añadir proyectos | `Projects:*` |
 
 > Los interruptores **solo pueden restringir**: la lista cerrada de herramientas de solo lectura vive en código y
@@ -64,11 +63,11 @@ El orquestador recibe en cada mensaje la lista de capacidades deshabilitadas par
 ### Repositories / Projects / AzureDevOps
 | Variable | Defecto | Secreto | Descripción |
 |---|---|---|---|
-| `Repositories__Provider` | `Local` | No | `None` (solo texto e imágenes), `Local` (carpetas) o `AzureDevOps` (solo lectura). |
+| `Repositories__Provider` | `None` | No | `None` (solo texto e imágenes), `Local` (carpetas) o `AzureDevOps` (solo lectura). |
 | `Repositories__LocalRoot` | vacío | No | Base para rutas `Path` relativas (relativa a la carpeta de la app si no es absoluta). |
 | `Projects__{i}__Id` | `demo-pagos` | No | Id corto (a-z, 0-9, guion). Máx. 20 proyectos. |
 | `Projects__{i}__DisplayName` | — | No | Nombre visible. |
-| `Projects__{i}__Path` | `samples/demo-pagos` | No | **Local**: carpeta del proyecto. |
+| `Projects__{i}__Path` | vacío | No | **Local**: carpeta del proyecto. |
 | `Projects__{i}__Project` / `Repository` / `Branch` | — / — / `main` | No | **AzureDevOps**: proyecto, repositorio y rama. |
 | `AzureDevOps__OrganizationUrl` | vacío | No | `https://dev.azure.com/<org>` (solo con `AzureDevOps`). |
 | `AzureDevOps__Pat` | vacío | **Sí** | PAT. Vacío = token de Entra de la identidad. En Azure: referencia a Key Vault. |
@@ -80,8 +79,8 @@ El orquestador recibe en cada mensaje la lista de capacidades deshabilitadas par
 ### Knowledge
 | Variable | Defecto | Descripción |
 |---|---|---|
-| `Knowledge__AgentsDirectory` | `agents` | Carpeta de instrucciones y skills. |
-| `Knowledge__PolicyCatalogPath` | `policies/catalogo.yaml` | Catálogo de políticas. |
+| `Knowledge__AgentsDirectory` | `knowledge/agents` | Carpeta publicada de instrucciones y skills. |
+| `Knowledge__PolicyCatalogPath` | `knowledge/policies/catalogo.yaml` | Catálogo publicado de políticas. |
 | `Knowledge__OrganizationName` | `el banco` | Cómo se nombra a la organización en los prompts. |
 
 ### Analysis

@@ -1,8 +1,8 @@
-using InfraAgent.Application.Abstractions;
-using InfraAgent.Application.Chat;
-using InfraAgent.Application.Review;
-using InfraAgent.Application.Tools;
-using InfraAgent.Core.Models;
+﻿using InfraAgent.Abstractions;
+using InfraAgent.Chat;
+using InfraAgent.Review;
+using InfraAgent.Tools;
+using InfraAgent.Models;
 using InfraAgent.Tests.Support;
 
 namespace InfraAgent.Tests.Application;
@@ -246,4 +246,3 @@ public class GenerationAndChatTests
         await Assert.ThrowsAsync<ArgumentException>(() => chat.DeleteConversationAsync("../x", default));
     }
 }
-

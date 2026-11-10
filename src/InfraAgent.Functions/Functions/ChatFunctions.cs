@@ -1,5 +1,5 @@
-using InfraAgent.Application.Chat;
-using InfraAgent.Core.Settings;
+﻿using InfraAgent.Chat;
+using InfraAgent.Settings;
 using InfraAgent.Functions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
