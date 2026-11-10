@@ -1,0 +1,23 @@
+<Project>
+  <!--
+    Contenido que debe viajar junto a los ejecutables (Function y CLI):
+      config/infraagent.settings.json  -> configuración única (sin secretos)
+      agents/**                        -> instrucciones y skills de cada agente
+      policies/**                      -> catálogo de políticas de la organización
+      samples/**                       -> proyectos de ejemplo para la demo (Repositories:Provider = Local)
+    Las rutas se publican relativas a la carpeta de la aplicación.
+  -->
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)..\</RepoRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(RepoRoot)config\infraagent.settings.json" Link="config\infraagent.settings.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(RepoRoot)agents\**\*" Link="agents\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(RepoRoot)policies\**\*" Link="policies\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(RepoRoot)samples\**\*" Link="samples\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

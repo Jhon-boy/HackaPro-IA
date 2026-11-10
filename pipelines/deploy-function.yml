@@ -1,0 +1,75 @@
+# ============================================================================
+# Compila, prueba y despliega InfraAgent en Azure Functions.
+#
+# Requisitos:
+#   - Service connection de Azure Resource Manager (variable AZURE_SERVICE_CONNECTION).
+#   - Function App creada con deploy/terraform (variable FUNCTION_APP_NAME).
+# La configuración NO va aquí: vive en App Settings (deploy/terraform) y en config/infraagent.settings.json.
+# ============================================================================
+trigger:
+  branches:
+    include: [main]
+  paths:
+    exclude: [docs/*, README.md]
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: Release
+  AZURE_SERVICE_CONNECTION: 'sc-infraagent'      # ajustar
+  FUNCTION_APP_NAME: 'func-infraagent-prod-eus2'  # ajustar
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildTest
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              packageType: sdk
+              version: 8.x
+
+          - script: dotnet test InfraAgent.sln -c $(buildConfiguration) --nologo
+            displayName: Pruebas (sin red)
+
+          - script: >
+              dotnet publish src/InfraAgent.Functions -c $(buildConfiguration)
+              -o $(Build.ArtifactStagingDirectory)/publish --nologo
+            displayName: Publicar Function
+
+          # El paquete incluye agents/, policies/ y config/ (ver build/InfraAgentContent.props).
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: $(Build.ArtifactStagingDirectory)/publish
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/infraagent.zip
+
+          - publish: $(Build.ArtifactStagingDirectory)/infraagent.zip
+            artifact: infraagent
+
+  - stage: Deploy
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: Function
+        environment: infraagent-prod        # permite aprobaciones manuales
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureFunctionApp@2
+                  inputs:
+                    connectedServiceNameARM: $(AZURE_SERVICE_CONNECTION)
+                    appType: functionAppLinux
+                    appName: $(FUNCTION_APP_NAME)
+                    package: $(Pipeline.Workspace)/infraagent/infraagent.zip
+                    runtimeStack: 'DOTNET-ISOLATED|8.0'
+
+                # Verificación posterior: /api/status devuelve 503 si falta configuración.
+                - pwsh: |
+                    $r = Invoke-RestMethod -Uri "https://$(FUNCTION_APP_NAME).azurewebsites.net/api/health"
+                    if ($r.status -ne 'ok') { throw 'La Function no responde correctamente.' }
+                    Write-Host 'Health OK. Revise /api/status (con clave) para el diagnóstico de configuración.'
+                  displayName: Verificar health

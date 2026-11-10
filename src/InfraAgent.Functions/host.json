@@ -1,0 +1,22 @@
+{
+  "version": "2.0",
+  "functionTimeout": "00:10:00",
+  "logging": {
+    "logLevel": {
+      "default": "Information",
+      "Microsoft": "Warning",
+      "System": "Warning",
+      "Azure": "Warning"
+    },
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": false
+      }
+    }
+  },
+  "extensions": {
+    "http": {
+      "routePrefix": "api"
+    }
+  }
+}

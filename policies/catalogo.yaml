@@ -1,0 +1,194 @@
+# ============================================================================
+# CATÁLOGO DE POLÍTICAS Y REGLAS DE SEGURIDAD — InfraAgent
+#
+# ⚠ CATÁLOGO DE EJEMPLO. Reemplazar por las políticas reales del banco.
+#
+# - Es la ÚNICA fuente de verdad para los agentes de Políticas, Generador IaC y Seguridad.
+# - Versionado: incrementar `version` en cada cambio; queda registrado en cada reporte.
+# - Formato de id: PREFIJO-NNN (SEC-001). Los ids no se reutilizan.
+# - severity: Info | Low | Medium | High | Critical. La fija este catálogo (el modelo no la rebaja).
+#   Con la configuración por defecto (Generation:BlockFrom), High y Critical disparan la autocorrección del Terraform generado.
+# - appliesTo: tipos de recurso Terraform. Vacío = regla general (aplica a todo).
+# - categorías: security, network, identity, data, monitoring, tagging, naming, regions
+#   (security/network/identity/data/monitoring las revisa también el agente de Seguridad).
+# ============================================================================
+version: "0.1-ejemplo"
+description: "Catálogo de ejemplo para el banco (reemplazar por el oficial)."
+
+policies:
+  - id: SEC-001
+    title: Cuentas de almacenamiento sin acceso público
+    category: security
+    severity: High
+    appliesTo: [azurerm_storage_account]
+    rule: >
+      Toda cuenta de almacenamiento debe tener public_network_access_enabled = false y
+      allow_nested_items_to_be_public = false.
+    remediation: Establecer ambos atributos en false y acceder por Private Endpoint.
+    compliantExample: |
+      resource "azurerm_storage_account" "datos" {
+        public_network_access_enabled   = false
+        allow_nested_items_to_be_public = false
+        # ...
+      }
+
+  - id: SEC-002
+    title: Contenedores de blobs privados
+    category: security
+    severity: High
+    appliesTo: [azurerm_storage_container]
+    rule: Todo contenedor debe usar container_access_type = "private".
+    remediation: Cambiar container_access_type a "private".
+
+  - id: SEC-003
+    title: TLS 1.2 como mínimo
+    category: security
+    severity: High
+    appliesTo:
+      - azurerm_storage_account
+      - azurerm_mssql_server
+      - azurerm_linux_web_app
+      - azurerm_windows_web_app
+      - azurerm_linux_function_app
+      - azurerm_windows_function_app
+    rule: >
+      Los servicios deben exigir TLS 1.2 o superior (min_tls_version = "TLS1_2" en storage,
+      minimum_tls_version = "1.2" en SQL y App Service).
+    remediation: Configurar la versión mínima de TLS en 1.2.
+
+  - id: SEC-004
+    title: Sin secretos en el código
+    category: security
+    severity: Critical
+    rule: >
+      El código no debe contener contraseñas, claves, tokens ni cadenas de conexión literales.
+      Se deben usar variables con sensitive = true sin valor por defecto, Key Vault o identidad administrada.
+    remediation: Reemplazar el valor literal por una variable sensible o una referencia a Key Vault y rotar el secreto expuesto.
+
+  - id: SEC-005
+    title: Key Vault con protección contra borrado
+    category: security
+    severity: High
+    appliesTo: [azurerm_key_vault]
+    rule: >
+      Todo Key Vault debe tener purge_protection_enabled = true y soft_delete_retention_days igual o mayor a 90.
+    remediation: Habilitar purge protection y fijar la retención en 90 días o más.
+
+  - id: SEC-006
+    title: Azure SQL sin acceso público y solo con Entra ID
+    category: security
+    severity: High
+    appliesTo: [azurerm_mssql_server]
+    rule: >
+      SQL Server debe tener public_network_access_enabled = false y un azuread_administrator con
+      azuread_authentication_only = true. No se admiten usuarios y contraseñas SQL.
+    remediation: Deshabilitar el acceso público y exigir autenticación solo con Entra ID.
+
+  - id: NET-001
+    title: Sin reglas de red abiertas a Internet en puertos de administración
+    category: network
+    severity: Critical
+    appliesTo: [azurerm_network_security_group, azurerm_network_security_rule]
+    rule: >
+      Ninguna regla de entrada con access = "Allow" puede tener origen "*", "0.0.0.0/0" o "Internet"
+      hacia los puertos 22, 3389, 1433, 3306, 5432 o hacia cualquier puerto ("*").
+    remediation: Restringir el origen a rangos internos o usar un bastión / acceso privado.
+
+  - id: NET-002
+    title: Servicios PaaS de datos solo por Private Endpoint
+    category: network
+    severity: High
+    appliesTo:
+      - azurerm_storage_account
+      - azurerm_mssql_server
+      - azurerm_key_vault
+      - azurerm_cosmosdb_account
+      - azurerm_postgresql_flexible_server
+    rule: >
+      Los servicios de datos deben exponerse únicamente mediante un azurerm_private_endpoint con zona DNS privada,
+      con el acceso público deshabilitado.
+    remediation: Agregar el Private Endpoint y su zona DNS privada, y deshabilitar el acceso público.
+
+  - id: NET-003
+    title: Aplicaciones solo por HTTPS
+    category: network
+    severity: Medium
+    appliesTo:
+      - azurerm_linux_web_app
+      - azurerm_windows_web_app
+      - azurerm_linux_function_app
+      - azurerm_windows_function_app
+    rule: Las aplicaciones web y de funciones deben tener https_only = true.
+    remediation: Establecer https_only = true.
+
+  - id: IAM-001
+    title: Identidad administrada en aplicaciones
+    category: identity
+    severity: High
+    appliesTo:
+      - azurerm_linux_web_app
+      - azurerm_windows_web_app
+      - azurerm_linux_function_app
+      - azurerm_windows_function_app
+    rule: >
+      Las aplicaciones deben usar identidad administrada (bloque identity) para acceder a otros recursos,
+      sin credenciales en app_settings ni connection_string.
+    remediation: Agregar identity { type = "SystemAssigned" } y asignar roles RBAC mínimos.
+
+  - id: IAM-002
+    title: Key Vault con autorización RBAC
+    category: identity
+    severity: Medium
+    appliesTo: [azurerm_key_vault]
+    rule: Key Vault debe usar rbac_authorization_enabled = true en lugar de access_policy.
+    remediation: Habilitar RBAC y migrar las access_policy a asignaciones de rol.
+
+  - id: DAT-001
+    title: Protección y retención de datos
+    category: data
+    severity: Medium
+    appliesTo: [azurerm_storage_account]
+    rule: >
+      Los datos en blobs deben tener versionado habilitado y una política de retención de borrado
+      (delete_retention_policy) de al menos 7 días.
+    remediation: Configurar blob_properties con versionado y delete_retention_policy.
+
+  - id: MON-001
+    title: Diagnóstico hacia Log Analytics
+    category: monitoring
+    severity: Medium
+    appliesTo:
+      - azurerm_key_vault
+      - azurerm_mssql_server
+      - azurerm_storage_account
+      - azurerm_linux_web_app
+      - azurerm_windows_web_app
+    rule: >
+      Los recursos críticos deben enviar sus registros a un workspace de Log Analytics mediante
+      azurerm_monitor_diagnostic_setting.
+    remediation: Agregar un diagnostic setting con enabled_log (category_group = "allLogs").
+
+  - id: TAG-001
+    title: Etiquetas obligatorias
+    category: tagging
+    severity: Medium
+    rule: >
+      Todo recurso que admita tags debe incluir las etiquetas ambiente, proyecto, responsable y centro_costo.
+    remediation: Definir un mapa local.tags con las cuatro etiquetas y aplicarlo a todos los recursos.
+
+  - id: NAM-001
+    title: Convención de nombres
+    category: naming
+    severity: Low
+    rule: >
+      Los nombres de recursos siguen el patrón <tipo>-<proyecto>-<ambiente>-<region>
+      (respetando las restricciones propias de cada servicio).
+    remediation: Construir los nombres desde variables y locals con el patrón indicado.
+
+  - id: REG-001
+    title: Regiones permitidas
+    category: regions
+    severity: High
+    rule: >
+      Solo se permiten las regiones eastus2 y centralus (ejemplo). Cualquier otra requiere excepción aprobada.
+    remediation: Usar una región permitida.

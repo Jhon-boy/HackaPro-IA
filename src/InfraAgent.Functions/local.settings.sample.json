@@ -1,0 +1,17 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+
+    "InfraAgent__Foundry__Endpoint": "https://<recurso>.services.ai.azure.com/api/projects/<proyecto>",
+    "InfraAgent__Foundry__DefaultAgentId": "<id-del-agente-de-foundry>",
+
+    "InfraAgent__Repositories__Provider": "Local",
+    "InfraAgent__Projects__0__Id": "demo",
+    "InfraAgent__Projects__0__DisplayName": "Proyecto de demo",
+    "InfraAgent__Projects__0__Path": "C:\\ruta\\a\\mi-proyecto-terraform",
+
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": ""
+  }
+}
